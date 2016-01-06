@@ -3,7 +3,12 @@
 #include <stdlib.h>     /* malloc, free, rand */
 
 int Fsize=50; /*enough space for the fmlas we use*/
+int inputs=6;
+
 int i;
+int j;
+
+/*typedef struct tableau tableau;*/
 
 struct tableau {
   char *root;
@@ -12,8 +17,10 @@ struct tableau {
   struct tableau *parent;
 }*tab, *node, *node1, *kid, *pa;
 
-/* Use p, q, r, s for propositions.  Use ~ for negation.  Use v for OR, use ^ for AND, use > for implies.  Brackets are (, ). */
-
+// Use p, q, r, s for propositions.  
+// Use ~ for negation.  
+// Use v for OR, use ^ for AND, use > for implies.  
+// Brackets are (, ).
 
 /* List processing methods  */
 
@@ -53,24 +60,128 @@ int bc(char x)
 {if ((x=='v')||(x=='^')||(x=='>')) return(1);else return(0);}
 
 
+//////////////////////////// PARSING ////////////////////////////
+
 /* The actual parsing methods.  */
 
-int parse(char *g)
-{/* return 1 if a proposition, 2 if neg, 3 if binary, ow 0*/
+char *partone(char *g) /* for binary connective formulas, returns first part*/
+{
+  int length = strlen(g);
+  int brackets = 0;
+  for (int i=1; i<length; i++) {
+    if (*(g+i) == '(') {
+      brackets++;
+    }
+    else if (*(g+i) ==')') {
+      brackets--;
+    }
+    else if (brackets == 0 && bc(*(g+i)) == 1) {
+      return segment(g, 1, i);
+    }
+  }
+  printf("Error: not a formula\n");
+  return NULL;
 }
 
-char *partone(char *g)
-{/* for binary connective formulas, returns first part*/
+char *parttwo(char *g) /* for binary connective formulas, returns second part*/
+{
+  int length = strlen(g);
+  int brackets = 0;
+  for (int i=1; i<length; i++) {
+    if (*(g+i) == '(') {
+      brackets++;
+    }
+    else if (*(g+i) ==')') {
+      brackets--;
+    }
+    else if (brackets == 0 && bc(*(g+i)) == 1) {
+      return segment(g, i+1, length-1);
+    }
+  }
+  printf("Error: not a formula\n");
+  return NULL;
 }
 
-char *parttwo(char *g)
-{/* for binary connective formulas, returns second part*/
+char bin(char *g) /*for binary connective formulas, returns binary connective (USE IN TABLEAU) */
+{
+  int length = strlen(g);
+  int brackets = 0;
+  for (int i=0; i<length; i++) {
+    if (*(g+i) == '(') {
+      brackets++;
+    }
+    else if (*(g+i) == ')') {
+      brackets--;
+    }
+    else if (brackets == 0 && bc(*(g+i)) == 1) {
+      return *(g+i);
+    }
+  }
+  printf("Error: not a formula\n");
+  return '\0';
 }
 
-char bin(char *g)
-{/*for binary connective formulas, returns binary connective*/
+int isBin(char *g) //is fmla a binary formula
+{
+  int brackets = 0;
+  int connectives = 0;
+  int length = strlen(g);
+
+  if(*g != '(' || *(g+length-1) != ')') {
+    return 0;
+  }
+
+  for (int i=1; i<length-1; i++) {
+    if (*(g+i) == '(') {
+      brackets++;
+    }
+    else if (*(g+i) == ')') {
+      brackets--;
+    }
+    else if (bc(*(g+i)) == 1 && brackets == 0) {
+      connectives++;
+    }
+  }
+
+  if (connectives == 0) {
+    return 1;
+  }
+
+  return 0;
 }
 
+int isfmla(char *g) { 
+  if (strlen(g) == 1 && prop(*g) == 1) {
+    return 1;
+  }
+  else if (*g == '~') {
+    return isfmla(mytail(g));
+  }
+  else if (isBin(g)) {
+    return ( isfmla(partone(g)) && isfmla(parttwo(g)) );
+  }
+  else {
+    return 0;
+  }
+}
+
+int parse(char *g) /* return 1 if a proposition, 2 if neg, 3 if binary, ow 0*/
+{
+  if(prop(*g)) {
+    return 1;
+  }
+  else if (*g == '~') {
+    return 2;
+  }
+  else if (*g == '(') {
+    return 3;
+  }
+  else {
+    return 0;
+  }
+}
+
+//////////////////////////// TABLEAU IMPLENTATION ////////////////////////////
 
 int type(char *g)
 {/*return 0 if not a formula, 1 for literal, 2 for alpha, 3 for beta, 4 for double negation*/
@@ -125,7 +236,7 @@ void alpha(struct tableau *t, char *g, char *h)/*not for double negs, adds g the
 {
 }
 
-void  add_two(struct tableau *t, char *g, char *h)/*for beta s, adds g, h on separate branches at every leaf below*/
+void add_two(struct tableau *t, char *g, char *h)/*for beta s, adds g, h on separate branches at every leaf below*/
 {
 }
 
@@ -142,41 +253,54 @@ void complete(struct tableau *t)/*expands the root then recursively expands any 
     }
 }
 
-
 int main()
-{ /*input a string and check if its a propositional formula */
+{ /*input 6 strings from "input.txt" */
+  char *names[inputs];/*to store each of the input strings*/
 
-char *name = malloc(Fsize);
- printf("Enter a formula:");
- scanf("%s", name);
-   if switch(parse(name))
-   {
-   0:printf("Not a formula\n");
-   1:printf("A proposition\n");
-   2:printf("A negation\n");
-   3:printf("A binary formula\n");
-   }
-   printf("the type is ");
-   switch(type(name))
-   {
-   0:printf("I told you, not a fmla\n");
-   1:printf("a literal\n");
-   2:printf("alpha\n");
-   3:printf("beta\n");
-   4:printf("double negation\n");
-  } 
-  If (type(name)>1)
-printf("first expansion fmla is %s and second expansion is %s\n", firstexp(name), secondexp(name));
+  for (i=0;i<inputs;i++) names[i]=malloc(Fsize);/*create enough space*/
 
-  /*make new tableau with name at root, no children, no parent*/
-  struct tableau t={name, NULL, NULL, NULL};
 
-  /*expand the root, recursively complete the children*/
-  complete(&t);
 
-  /*check if closed*/
-  if (closed(&t)) printf("%s is not satisfiable", name);
-  else printf("%s is satisfiable", name);
+  FILE *fp, *fpout, *fopen();
 
+  if ((  fp=fopen("input.txt","r"))==NULL){printf("Error opening file");exit(1);}
+  if ((  fpout=fopen("output.txt","w"))==NULL){printf("Error opening file");exit(1);}/*ouputs to be sent to "output.txt"*/
+
+  fscanf(fp,"%s %s %s %s %s %s",names[0],names[1], names[2], names[3],names[4],names[5]);/*read input strings from "input.txt"*/
+ 
+  /*lets check your parser*/
+  for(i=0;i<inputs;i++)
+    {j=parse(names[i]);
+      switch(j)
+  {
+  case(0):fprintf(fpout,"%s is not a formula", names[i]);break;
+  case(1):fprintf(fpout,"%s is a proposition",names[i]);break;
+  case(2):fprintf(fpout,"%s is a negation",names[i]);break;
+  case(3):fprintf(fpout,"%s is a binary formula",names[i]);break;
+  default:fprintf(fpout,"%s is not a formula",names[i]);break;
+  }
+    }
+ 
+  /*make 6 new tableaus each with name at root, no children, no parent*/
+
+  struct tableau tabs[inputs];
+
+  for(i=0;i<inputs;i++)
+    {
+      tabs[i].root=names[i];
+      tabs[i].parent=NULL;
+      tabs[i].left=NULL;
+      tabs[i].right=NULL;
+
+      /*expand each tableau until complete, then see if closed */ 
+
+     complete(&tabs[i]);
+      if (closed(&tabs[i])) fprintf(fpout,"%s is not satisfiable\n", names[i]);
+      else fprintf(fpout,"%s is satisfiable\n", names[i]);
+    }
+ 
+  fclose(fp);
+  fclose(fpout);
+ 
   return(0);
 }

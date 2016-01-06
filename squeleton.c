@@ -5,7 +5,6 @@
 int Fsize=50;
 int inputs=6;
 
-
 int i;
 int j;
 
