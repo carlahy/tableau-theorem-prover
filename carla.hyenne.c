@@ -19,10 +19,29 @@ struct tableau {
 
 char *mytail(char *list)  /*given non-empty string, returns string without the first char*/
 {
+  int length = strlen(list);
+  char *tail = malloc(sizeof(char) * (length-1));
+  int y=0;
+  for(int i=1; i< length; i++) {
+    tail[0] = list[i];
+  }
+  return tail;
 }
 
 char *segment(char *list, int i, int j)/* characters from pos i up to j-1, provided i<=j*/
 {
+  if (i<=j) {
+    char *result = malloc(sizeof(char) * (j-i));
+    int y = 0;
+    for (int x = i; x < j; x++){
+      result[y] = list[x];
+    }
+    return result;
+  }
+  else {
+    printf("Invalid segment parameters\n");
+    return NULL;
+  }
 }
 
 /* Basics.  Recognise propositions and connectives.  */
