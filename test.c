@@ -22,6 +22,7 @@ char *segment(char *list, int i, int j)/* characters from pos i up to j-1, provi
     int y = 0;
     for (int x = i; x < j; x++){
       result[y] = list[x];
+      y++;
     }
     return result;
   }
@@ -111,7 +112,7 @@ int isBin(char *g) //is fmla a binary formula
     return 0;
   }
 
-  for (int i=1; i<length-1; i++) {
+  for (int i=1; i<length-2; i++) {
     if (*(g+i) == '(') {
       brackets++;
     }
@@ -123,7 +124,7 @@ int isBin(char *g) //is fmla a binary formula
     }
   }
 
-  if (connectives == 0) {
+  if (connectives != 0) { //WTF
     return 1;
   }
 
@@ -136,37 +137,58 @@ int isfmla(char *g) {
   }
   else if (*g == '~') {
     return isfmla(mytail(g));
-  }
-  else if (isBin(g)) {
+  } 
+  else if (isBin(g) == 1) { //WRONG : if there is a binary 
     return ( isfmla(partone(g)) && isfmla(parttwo(g)) );
   }
   else {
+    //printf("Not a formula\n");
     return 0;
   }
 }
 
 int parse(char *g) /* return 1 if a proposition, 2 if neg, 3 if binary, ow 0*/
 {
-  if(prop(*g)) {
-    return 1;
+  printf("First char == %c  ", *g);
+  printf("formula is ");
+  if (isfmla(g) == 1) {
+
+    if (strlen(g) == 1 && prop(*g) == 1) {
+      printf("a proposition\n");
+      return 1;
+    }
+    if (*g == '~') {
+      printf("a negation\n");
+      return 2;
+    }
+    if (*g == '(') {
+      printf("binary\n");
+      return 3;
+    }
+    else {
+      printf("not a fmla\n");
+      return 0;
+    }
+
   }
-  else if (*g == '~') {
-    return 2;
-  }
-  else if (*g == '(') {
-    return 3;
-  }
-  else {
-    return 0;
-  }
+  printf("not a fmla.\n");  
+  return 0;
 }
 
 int main() {
-	char string[] = "hello world!";
-	int length = strlen(string);
-	printf("length is %i", length);
+	//char string[] = "hello world!";
+	//int length = strlen(string);
+	//printf("length is %i", length);
 	//printf("%s\n", );
-
+  char* formulas[] = { "(qvp)", "~(p>(q>p))", "(pv~q)", "~~p", "~(pv~p)", "(p^~p)", "p", "p~" };
+  
+  //isfmla("(pvq)");
+  for (int i = 0; i < 8; ++i)
+  {
+    printf("%s\t", formulas[i]);
+    parse(formulas[i]);
+    printf("\n");
+  }
 
 
 	return 0;
