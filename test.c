@@ -166,5 +166,8 @@ int main() {
 	int length = strlen(string);
 	printf("length is %i", length);
 	//printf("%s\n", );
+
+
+
 	return 0;
 }

@@ -118,7 +118,7 @@ char bin(char *g) /*for binary connective formulas, returns binary connective (U
     }
   }
   printf("Error: not a formula\n");
-  return '\0';
+  return(0);
 }
 
 int isBin(char *g) //is fmla a binary formula
@@ -187,17 +187,21 @@ int type(char *g)
 {/*return 0 if not a formula, 1 for literal, 2 for alpha, 3 for beta, 4 for double negation*/
 }
 
-char *firstexp(char *g)
-{/* for alpha and beta formulas*/
-  if (parse(g)==3)/*binary fmla*/  switch(bin(g))
-         {case('v'): return(??);break;
-         case('^'): return(??);break;
-         case('>'): return(??);break;
-         default:printf("what the f**k?");return(0);
-         }
-  if ((parse(g)==2)&& (parse(mytail(g))==2)/*double neg*/) return(??);/*throw away first two chars*/
+char *firstexp(char *g) /* for alpha and beta formulas*/
+{
+  if (parse(g)==3) /*binary fmla*/
+  switch(bin(g)) {  
+    case('v'): return(??);break;
+    case('^'): return(??);break;
+    case('>'): return(??);break;
+    default:printf("what the f**k?");return(0);
+  }
 
-  if ((parse(g)==2)&&parse(mytail(g))==3) /*negated binary*/ 
+  if ( (parse(g)==2) && (parse(mytail(g))==2)) { /*double neg*/
+    return(mytail(mytail(g))); /*throw away first two chars*/
+  }
+
+  if ( (parse(g)==2) && parse(mytail(g))==3 ) /*negated binary*/ 
   switch(bin(mytail(g)))
   {
     case('v'):return(??);break;
@@ -205,31 +209,81 @@ char *firstexp(char *g)
     case('>'): return(??);break;
   } 
   return(0);
-}        
-
+}
 
 char *secondexp(char *g)
 {/* for alpha and beta formulas, but not for double negations, returns the second expansion formula*/
 }        
 
-int find_above(struct tableau *t, char *g) /*Is g label of current node or above?*/
+int find_above(struct tableau *t, char *g) /*Is g label of current node or above? USED WHEN LOOKING IF SATISFIABLE*/
 {
+  if ( tableau.root == g ) {
+    return 1
+  }
+  else {
+    return find_above(tableau.parent, g);
+  }
+  printf("Could not find specified node above.\n");
+  return 0;
 }
 
 int closed1(struct tableau *t) /*check if p and not p at or above t*/
 {
-  if (t==NULL) return(0);
-  else
-    {
+  if (tableau == NULL) {
+    return 0; //OPEN
+  }
+  else {
+    if (tableau.parent.root[0] == '~') {
+      if (tableau.root == mytail(tableau.parent.root)) {
+        return 1;
+      }
     }
+    else {
+      return (closed1(tableau.parent));
+    }
+  }
+  return 0;
 }
       
-int closed(struct tableau *t) /*check if either *t is closed 1, or if all children are closed, if so return 1, else 0 */
+int closed(struct tableau *t) /*check if either *t is closed1, or if all children are closed, if so return 1, else 0 */
 {
+  if (closed1(tableau) == 1) {
+    return 1;
+  }
+  else {
+    return ( closed1(tableau.left) && closed1(tableau.right) );
+  }
+  printf("Tableau is open\n");
+  return 0;
 }
 
-void  add_one( struct tableau *t, char *g)/* adds g at every leaf below*/
+void add_one(struct tableau *t, char *g)/* adds g at every leaf below*/
 {
+  if (tableau.left == NULL && tableau.right == NULL) {
+    //tableau.left = new tableau;
+
+    kid.root = g;
+    kid.left = NULL;
+    kid.right = NULL;
+    kid.parent = tableau.left;
+
+    tableau.left = *kid //WHAT AM I DOING?
+
+    // leaf_tableau = malloc(sizeof(struct tableau))
+    // leaf_tableau.root = g;
+    // leaf_tableau.left == NULL;
+    // leaf_tableau.right == NULL;
+    // leaf_tableau.parent = tableau.left;
+    // tableau.left = leaf_tableau;
+  }
+  else {
+    if (tableau.left != NULL) {
+      add_one(tableau.left, g);  
+    }
+    if (tableau.right != NULL) {
+      add_one(tableau.right, g);
+    }
+  }
 }
 
 void alpha(struct tableau *t, char *g, char *h)/*not for double negs, adds g then h at every leaf below*/
@@ -241,7 +295,7 @@ void add_two(struct tableau *t, char *g, char *h)/*for beta s, adds g, h on sepa
 }
 
 void expand(struct tableau *tp)/*must not be null.  Checks the root.  If literal, does nothing.  If beta calls add_two with suitable fmlas, if alpha calls alpha with suitable formulas unless a double negation then � */
-{ 
+{
 }
 
 void complete(struct tableau *t)/*expands the root then recursively expands any children*/
