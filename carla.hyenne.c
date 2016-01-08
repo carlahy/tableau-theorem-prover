@@ -83,7 +83,7 @@ char *parttwo(char *g) /* for binary connective formulas, returns second part*/
   return NULL;
 }
 
-char bin(char *g) /*for binary connective formulas, returns binary connective (USE IN TABLEAU) */
+char bin(char *g) /*for binary connective formulas, returns binary connective*/
 {
   int length = strlen(g);
   int brackets = 0;
@@ -167,10 +167,46 @@ int parse(char *g) /* return 1 if a proposition, 2 if neg, 3 if binary, ow 0*/
   return 0;
 }
 
+/* 
+alpha --> ^ , ~ v , ~ >, ~ ~ 
+
+*/
+
 //////////////////////////// TABLEAU IMPLENTATION ////////////////////////////
 
 int type(char *g)
 {/*return 0 if not a formula, 1 for literal, 2 for alpha, 3 for beta, 4 for double negation*/
+  if (parse(g) == 1) {
+    return 1;
+  }
+
+  else if (parse(g) == 3) {
+    char connective = bin(g);
+    if (connective == '^') { //(p^q), alpha
+      return 2;
+    }
+    else if (connective == 'v') { //(pvq), beta
+      return 3;
+    }
+    else if (connective == '>') { //(p>q), beta
+      return 3;
+    }
+  }
+
+  else if (parse(g) == 2 && parse(mytail(g)) != 2) { //single negation
+    if (type(mytail(g)) == 2) { //~(p^q)
+      return 3;
+    }
+    else if (type(mytail(g)) == 3) { //~(pvq), ~(p>q)
+      return 2;
+    }
+  }
+
+  else if (parse(g) == 2 && parse(mytail(g)) == 2) { //double negation
+    return 4;
+  }
+
+  return 0;
 }
 
 char *firstexp(char *g) /* for alpha and beta formulas*/
