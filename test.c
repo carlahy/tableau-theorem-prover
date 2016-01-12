@@ -175,21 +175,62 @@ int parse(char *g) /* return 1 if a proposition, 2 if neg, 3 if binary, ow 0*/
   return 0;
 }
 
+char *negate(char *g) {
+  char *negated = malloc(sizeof(char) * (strlen(g) + 1));
+  negated[0]='~';
+  int x=1;
+  for (int i = 0; i < strlen(g); i++) {
+    negated[x] = *(g+i);
+    x++;
+  }
+  return negated;
+}
+
 int main() {
-	//char string[] = "hello world!";
-	//int length = strlen(string);
-	//printf("length is %i", length);
-	//printf("%s\n", );
+	
   char* formulas[] = { "(qvp)", "~(p>(q>p))", "(pv~q)", "~~p", "~(pv~p)", "(p^~p)", "p", "p~" };
   
-  //isfmla("(pvq)");
-  for (int i = 0; i < 8; ++i)
-  {
-    printf("%s\t", formulas[i]);
-    parse(formulas[i]);
-    printf("\n");
-  }
+  // for (int i = 0; i < 8; ++i)
+  // {
+  //   printf("%s\t", formulas[i]);
+  //   parse(formulas[i]);
+  //   printf("\n");
+  // }
+
+  char *string;
+  string = negate(formulas[1]);
+  printf("%s\n", string);
 
 
 	return 0;
 }
+
+
+// char *firstexp(char *g) /* for alpha and beta formulas*/
+// {
+//   if (parse(g)==3) /*binary fmla*/
+//   switch(bin(g)) {  
+//     case('v'): return(??);break; //beta
+//     case('^'): return(??);break; //alpha
+//     case('>'): return(??);break; //beta
+//     default:printf("what the f**k?");return(0);
+//   }
+
+//   if ( (parse(g)==2) && (parse(mytail(g))==2)) { /*double neg*/
+//     return(mytail(mytail(g))); 
+//   }
+
+//   if ( (parse(g)==2) && parse(mytail(g))==3 ) /*negated binary*/ 
+//   switch(bin(mytail(g)))
+//   {
+//     case('v'): return( alpha( negate(partone(g)), negate(parttwo(g))) );break;
+//     case('^'): return( add_two( negate(partone(g)), negate(parttwo(g)) ) );break;
+//     case('>'): return( alpha( partone(g), negate(parttwo(g)) ) );break;
+//   } 
+//   return(0);
+// }
+
+// char *secondexp(char *g)
+// {/* for alpha and beta formulas, but not for double negations, returns the second expansion formula*/
+// negated(partone(g), ^ , negated(parttwo))
+// }

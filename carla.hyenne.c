@@ -2,6 +2,21 @@
 #include <string.h>   /* for all the new-fangled string functions */
 #include <stdlib.h> 
 
+int Fsize=50;
+int inputs=6;
+
+int i;
+int j;
+
+/*typedef struct tableau tableau;*/
+
+struct tableau {
+  char *root;
+  struct  tableau *left;
+  struct tableau *right;
+  struct tableau *parent;
+}*tab, *node, *node1, *kid, *pa;
+
 /* List processing methods  */
 
 char *mytail(char *list)  /*given non-empty string, returns string without the first char*/
@@ -167,11 +182,6 @@ int parse(char *g) /* return 1 if a proposition, 2 if neg, 3 if binary, ow 0*/
   return 0;
 }
 
-/* 
-alpha --> ^ , ~ v , ~ >, ~ ~ 
-
-*/
-
 //////////////////////////// TABLEAU IMPLENTATION ////////////////////////////
 
 int type(char *g)
@@ -210,61 +220,34 @@ int type(char *g)
 }
 
 char *negate(char *g) {
-  char *negated = malloc(sizeof(char) * (strlen(g)));
+  char *negated = malloc(sizeof(char) * (strlen(g) + 1));
   negated[0]='~';
   int x=1;
-  for (int i = 0; i < strlen(g)-1; i++) {
+  for (int i = 0; i < strlen(g); i++) {
     negated[x] = *(g+i);
     x++;
   }
   return negated;
-}
-
-char *firstexp(char *g) /* for alpha and beta formulas*/
-{
-  if (parse(g)==3) /*binary fmla*/
-  switch(bin(g)) {  
-    case('v'): return(??);break; //beta
-    case('^'): return(??);break; //alpha
-    case('>'): return(??);break; //beta
-    default:printf("what the f**k?");return(0);
-  }
-
-  if ( (parse(g)==2) && (parse(mytail(g))==2)) { /*double neg*/
-    return(mytail(mytail(g))); 
-  }
-
-  if ( (parse(g)==2) && parse(mytail(g))==3 ) /*negated binary*/ 
-  switch(bin(mytail(g)))
-  {
-    case('v'): return( negated(partone(g), ^ , negated(parttwo)) );break;
-    case('^'): return(??);break;
-    case('>'): return(??);break;
-  } 
-  return(0);
-}
-
-char *secondexp(char *g)
-{/* for alpha and beta formulas, but not for double negations, returns the second expansion formula*/
 }        
 
 void add_one(struct tableau *t, char *g)/* adds g at every leaf below*/
 {
-  if (t.left == NULL && t.right == NULL) {
+  if ((*t).left == NULL && (*t).right == NULL) {
 
-    kid->root = g;
-    kid->left = NULL;
-    kid->right = NULL;
-    kid->parent = t;
+    struct tableau *newtab = malloc(sizeof(struct tableau));
+    newtab->root = g;
+    newtab->left = NULL;
+    newtab->right = NULL;
+    newtab->parent = t;
 
-    t.left = kid; //WTF AM I DOING?
+    t->left = newtab;
   }
   else {
-    if (t.left != NULL) {
-      add_one(t.left, g);  
+    if ((*t).left != NULL) {
+      add_one((*t).left, g);  
     }
-    if (t.right != NULL) {
-      add_one(t.right, g);
+    if ((*t).right != NULL) {
+      add_one((*t).right, g);
     }
   }
 }
@@ -277,27 +260,31 @@ void alpha(struct tableau *t, char *g, char *h)/*not for double negs, adds g the
 
 void add_two(struct tableau *t, char *g, char *h)/*for beta s, adds g, h on separate branches at every leaf below*/
 {
-  if (t.left == NULL && t.right == NULL) {
+  if ((*t).left == NULL && (*t).right == NULL) {
 
-    node->root = g;
-    node->left = NULL;
-    node->right = NULL;
-    node->parent = t;
-    t.left = node; //WTF
+    struct tableau *lefttab = malloc(sizeof(struct tableau));
+    
+    lefttab->root = g;
+    lefttab->left = NULL;
+    lefttab->right = NULL;
+    lefttab->parent = t;
+    t->left = lefttab;
 
-    node1->root = h;
-    node1->left = NULL;
-    node1->right = NULL;
-    node1->parent = t;
-    t.right = node1; //WTF
+    struct tableau *righttab = malloc(sizeof(struct tableau));
+
+    righttab->root = h;
+    righttab->left = NULL;
+    righttab->right = NULL;
+    righttab->parent = t;
+    t->right = righttab;
 
   }
   else {
-    if (t.left != NULL) {
-      add_two(t.left, g, h);  
+    if ((*t).left != NULL) {
+      add_two((*t).left, g, h);  
     }
-    if (t.right != NULL) {
-      add_two(t.right, g, h);
+    if ((*t).right != NULL) {
+      add_two((*t).right, g, h);
     }
   }
 }
@@ -308,27 +295,37 @@ If literal, does nothing.
 If beta calls add_two with suitable fmlas, 
 if alpha calls alpha with suitable formulas unless a double negation then � */
 {
-  //must not be NULL
-  //if literal, do nothing
-  //if type == 2 (negated)
+  if((*tp).root != NULL) {
+    //if literal, do nothing
+    //if binary formula
+    if (parse((*tp).root) == 3) { //if binary (not negated)
 
-  //if beta, 
-  else if (type(tp.root) == 2) {
-    add_two(tp, partone(tp.root), parttwo(tp.root));
+      if(type((*tp).root) == 2) { //if alpha
+        alpha(tp, partone((*tp).root), parttwo((*tp).root));
+      }
+      else if(type((*tp).root)== 3) { //if beta
+        add_two(tp, partone((*tp).root), parttwo((*tp).root));
+      }
+    }
+
+    else if ( parse((*tp).root) == 2 && type((*tp).root) != 4) { //if negated, but not double negated
+
+      if (type(mytail((*tp).root)) == 2) { // if alpha
+        add_two( tp, negate(partone((*tp).root)), negate(parttwo((*tp).root)) );
+      }
+      else if (type(mytail((*tp).root)) == 3) { //if beta
+        if (bin((*tp).root) == 'v') {
+          alpha( tp, negate(partone((*tp).root)), negate(parttwo((*tp).root)) );
+        }
+        else if (bin((*tp).root) == '>') {
+          alpha( tp, partone((*tp).root), negate(parttwo((*tp).root)) );
+        }
+      }
+    }
+
+    expand((*tp).left);
+    expand((*tp).right);
   }
-
-  //calls add_two with suitable fmlas
-
-  //if alpha, 
-
-  //calls add_one with suitable fmlas (unless double neg)
-  else if (type(tp.root) == 3) {
-    alpha(tp, partone(tp.root), parttwo(tp.root)); //WTF is it ROOT or something else?
-  }
-
-  else if (type(tp.root) == 4) { //if double negation, add firstexp to every leaf node
-    add_one(tp, firstexp(tp.root));
-  } 
 }
 
 void complete(struct tableau *t) /*expands the root then recursively expands any children*/
@@ -340,34 +337,25 @@ void complete(struct tableau *t) /*expands the root then recursively expands any
     }
 }
 
-int find_above(struct tableau *t, char *g) /*Is g label of current node or above? USED WHEN LOOKING IF SATISFIABLE*/
+int find_above(struct tableau *t, char *g) /*Is g label of current node or above?*/
 {
-  if ( t.root == g ) {
-    return 1
+  if ( (*t).root == g ) {
+    return 1;
   }
   else {
-    return find_above(t.parent, g);
+    return find_above((*t).parent, g);
   }
-  // printf("Could not find specified node above.\n");
   return 0;
 }
 
-int closed1(struct t *t) /*check if p and not p at or above t*/
+int closed1(struct tableau *t) /*check if p and not p at or above t*/
 {
-  if (t == NULL) {
-    return 0; //OPEN
-  }
-  else {
-    if (t.parent.root[0] == '~') {
-      if (t.root == mytail(t.parent.root)) {
-        return 1;
-      }
-    }
-    else {
-      return (closed1(t.parent));
+  if (type((*t).root) == 1) {
+    if (find_above(t, negate((*t).root)) == 1) {
+      return 1; //CLOSED
     }
   }
-  return 0;
+  return 0; //OPEN
 }
       
 int closed(struct tableau *t) /*check if either *t is closed1, or if all children are closed, if so return 1, else 0 */
@@ -376,9 +364,8 @@ int closed(struct tableau *t) /*check if either *t is closed1, or if all childre
     return 1;
   }
   else {
-    return ( closed1(t.left) && closed1(t.right) );
+    return ( closed1((*t).left) && closed1((*t).right) );
   }
-  // printf("Tableau is open\n");
   return 0;
 }
 
