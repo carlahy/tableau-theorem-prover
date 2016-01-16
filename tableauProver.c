@@ -43,7 +43,6 @@ char *segment(char *list, int i, int j)/* characters from pos i up to j-1, provi
     return result;
   }
   else {
-    printf("Invalid segment parameters\n");
     return NULL;
   }
 }
@@ -76,7 +75,6 @@ char *partone(char *g) /* for binary connective formulas, returns first part*/
       return segment(g, 1, i);
     }
   }
-  // printf("Error: not a formula\n");
   return NULL;
 }
 
@@ -95,7 +93,6 @@ char *parttwo(char *g) /* for binary connective formulas, returns second part*/
       return segment(g, i+1, length-1);
     }
   }
-  // printf("Error: not a formula\n");
   return NULL;
 }
 
@@ -117,7 +114,6 @@ char bin(char *g) /*for binary connective formulas, returns binary connective*/
       return *(g+i);
     }
   }
-  // printf("Error: not a formula\n");
   return 0;
 }
 
@@ -143,7 +139,7 @@ int isBin(char *g) //is fmla a binary formula
     }
   }
 
-  if (connectives != 0) { //WTF
+  if (connectives != 0) {
     return 1;
   }
 
@@ -157,7 +153,7 @@ int isfmla(char *g) {
   else if (*g == '-') {
     return isfmla(mytail(g));
   } 
-  else if (isBin(g) == 1) { //WRONG : if there is a binary 
+  else if (isBin(g) == 1) {
     return ( isfmla(partone(g)) && isfmla(parttwo(g)) );
   }
   else {
@@ -222,36 +218,6 @@ int type(char *g)
 
   return 0;
 }
-
-// char *firstexp(char *g) /* for alpha and beta formulas*/
-// {
-//   if (parse(g)==3) /*binary fmla*/
-//   switch(bin(g)) { 
-//     case('v'): return( add_two(partone(g), parttwo(g)) );break;
-//     case('^'): return( add_one);break;
-//     case('>'): return(??);break;
-//     default:printf("what the f**k?");return(0);
-//   }
-
-//   if ((parse(g)==2) && (parse(mytail(g))==2)) { /*double neg*/
-//     return(mytail(mytail(g)));throw away first two chars
-//   }
-
-//   if ((parse(g)==2) && parse(mytail(g))==3) /*negated binary*/ 
-//   switch(bin(mytail(g)))
-//   {
-//     case('v'):return(??);break;
-//     case('^'):return(??);break;
-//     case('>'): return(??);break;
-//   } 
-//   return(0);
-// }        
-
-
-// char *secondexp(char *g)
-// {/* for alpha and beta formulas, but not for double negations, returns the second expansion formula*/
-//   if(bin )
-// } 
 
 char *negate(char *g) {
   if (parse(g) == 2) {
@@ -369,9 +335,7 @@ void complete(struct tableau *t) /*expands the root then recursively expands any
   if (t!=NULL)
   { 
     expand(t);
-    // printf("LEFT\n");
     complete((*t).left);
-    // printf("RIGHT\n");
     complete((*t).right); 
   }
 }
@@ -380,17 +344,13 @@ int find_above(struct tableau *t, char *g) /*Is g label of current node or above
 {
   if (t != NULL) 
   {
-    printf("2\n");
     if ( strcmp((*t).root, g) == 0 ) {
-      printf("3\n");
       return 1;
     }
     else {
-      printf("4\n");
       return find_above((*t).parent, g);
     }
   }
-  printf("5\n");
   return 0;
 }
 
@@ -400,36 +360,35 @@ int closed1(struct tableau *t) /*check if p and not p at or above t*/
     if (find_above(t, negate((*t).root)) == 1) {
       return 1;
     }
-    return closed1((*t).parent);
+    else {
+      return closed1((*t).parent);      
+    }
   }
   return 0;
 }
-      
+
 int closed(struct tableau *t) /*check if either *t is closed1, or if all children are closed, if so return 1, else 0 */
 {
-  if (closed1(t) == 1) {
-    printf("Closed .. \n");
+  if (type((*t).root) == 4 && type(mytail(mytail((*t).root))) == 1) {
+    return 0;
+  }
+  if (closed1(t) == 1) { 
     return 1;
   }
   else {
-    printf("Not yet closed .. \n");
     if ( (*t).left == NULL ) {
-      printf("Left is NULL, exit\n");
       return 1;
     } else {
-      printf("LEFT\n");
       closed((*t).left);  
     }
+    
     if ( (*t).right == NULL ) {
-      printf("Right is NULL, exit\n");
       return 1;
     }
     else {
-      printf("RIGHT\n");
       closed((*t).right);  
     }
   }
-
   return 0;
 }
 
@@ -474,17 +433,13 @@ int main()
     tabs[i].right=NULL;
 
     complete(&tabs[i]);
+
     if (closed(&tabs[i]) == 1) fprintf(fpout,"%s is not satisfiable\n", names[i]);
-  else fprintf(fpout,"%s is satisfiable\n", names[i]);
+    else fprintf(fpout,"%s is satisfiable\n", names[i]);
   }
 
-  
- 
   fclose(fp);
   fclose(fpout);
  
   return(0);
 }
-
-
-
